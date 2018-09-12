@@ -6,6 +6,7 @@
 #	port	The server's port number
 
 proc Echo_Server {port} {
+    .estado insert end $::texto
     set s [socket -server EchoAccept $port]
     vwait forever
 }
@@ -25,7 +26,9 @@ proc EchoAccept {sock addr port} {
 
     # Record the client's information
 
-    puts "Accept $sock from $addr port $port"
+    set status "Accept $sock from $addr port $port"
+    .estado insert end $status
+    .estado insert end "\n"
     set echo(addr,$sock) [list $addr $port]
 
     # Ensure that each "puts" by the server
@@ -50,12 +53,20 @@ proc Echo {sock} {
 
     # Check end of file or abnormal connection drop,
     # then echo data back to the client.
-
     if {[eof $sock] || [catch {gets $sock line}]} {
 	close $sock
-	puts "Close $echo(addr,$sock)"
+	set status "Close $echo(addr,$sock)"
+    .estado insert end $status
+    .estado insert end "\n"
 	unset echo(addr,$sock)
     } else {
+    .mensaje_r insert end $line
+    .mensaje_r insert end "\n"
 	puts $sock $line
     }
+}
+
+proc finish {} {
+    tk_messageBox -message "Desconectar servidor" -title "Finish Server" -icon info
+    exit 1
 }
